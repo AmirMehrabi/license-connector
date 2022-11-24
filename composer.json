@@ -1,5 +1,5 @@
 {
-    "name": "laravel-ready/license-connector",
+    "name": "amoori/license-connector",
     "description": "Connector package for License Server",
     "type": "library",
     "license": "MIT",
