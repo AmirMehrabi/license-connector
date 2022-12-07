@@ -40,11 +40,7 @@ class ConnectorService
         if ($this->accessToken) {
             $url = Config::get('license-connector.license_server_url') . '/api/license-server/license';
 
-            
-
-
             $client = new \GuzzleHttp\Client();
-
 
             $response = $client->post( $url, [
                 'http_errors' => false,
@@ -60,8 +56,6 @@ class ConnectorService
                 ]
             ]);
     
-    
-
             if ($response->getStatusCode() == 200) {
                 
                 logger($response->getBody(). 'is da licence');
@@ -71,6 +65,66 @@ class ConnectorService
                 $this->license = $license;
 
                 return $license && $license->status == 'active';
+            }
+            
+        }
+
+        
+        return false;
+    }
+
+
+        /**
+     * Check the license 
+     *
+     * @param string $licenseKey
+     * @param array $data
+     *
+     * @return boolean
+     */
+    public function checkLicense($data = [])
+    {
+
+        if ($this->accessToken) {
+
+            // Cache forget Should be removed after tests
+            Cache::forget('current_license');
+
+
+
+            $license = Cache::get('current_license');
+
+            if ($license) {
+                return $license;
+            }
+
+            $url = Config::get('license-connector.license_server_url') . '/api/license-server/license';
+
+            $client = new \GuzzleHttp\Client();
+
+            $response = $client->post( $url, [
+                'http_errors' => false,
+                'json' => [
+                    $data
+                ],
+                'headers' => [
+                    'x-host' => Config::get('app.url'),
+                    'x-host-name' => Config::get('app.name'),
+                    'Authorization' => "Bearer {$this->accessToken}",
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ]
+            ]);
+
+            if ($response->getStatusCode() == 200) {
+                
+                logger($response->getBody(). 'is da licence');
+                
+                $license = json_decode($response->getBody());
+                Cache::put('current_license', $license, now()->addMinutes(60));
+                return $license;
+
+
             }
             
         }
@@ -90,7 +144,7 @@ class ConnectorService
     {
         
         $accessTokenCacheKey = $this->getAccessTokenKey($licenseKey);
-        Cache::forget($accessTokenCacheKey);
+        // Cache::forget($accessTokenCacheKey);
         $accessToken = Cache::get($accessTokenCacheKey, null);
 
         if ($accessToken) {
