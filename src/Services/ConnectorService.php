@@ -37,8 +37,12 @@ class ConnectorService
     public function validateLicense($data = [])
     {
 
-        if ($this->accessToken) {
+        // if ($this->accessToken) {
             $url = Config::get('license-connector.license_server_url') . '/api/license-server/license';
+
+            if(empty($this->accessToken)){
+                $this->accessToken = "test";
+            }
 
             $client = new \GuzzleHttp\Client();
 
@@ -58,7 +62,7 @@ class ConnectorService
     
             if ($response->getStatusCode() == 200) {
                 
-                logger($response->getBody(). 'is da licence');
+                // logger($response->getBody(). 'is da licence');
                 
                 $license = json_decode($response->getBody());
 
@@ -67,7 +71,7 @@ class ConnectorService
                 return $license && $license->status == 'active';
             }
             
-        }
+        // }
 
         
         return false;
